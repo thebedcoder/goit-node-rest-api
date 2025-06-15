@@ -76,7 +76,7 @@ export const updateContact = async (req, res, next) => {
   }
 };
 
-export const updateFavoriteStatus = async (req, res, next) => {
+export const updateStatusContact = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { favorite } = req.body;

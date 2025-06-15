@@ -4,9 +4,10 @@ class ContactsService {
   async listContacts() {
     try {
       const contacts = await Contact.findAll({
+        raw: true,
         order: [["createdAt", "DESC"]],
       });
-      return contacts.map((contact) => contact.toJSON());
+      return contacts;
     } catch (error) {
       console.error("Error listing contacts:", error);
       throw error;
@@ -43,7 +44,6 @@ class ContactsService {
   async addContact(name, email, phone) {
     try {
       const newContact = await Contact.create({
-        id: Date.now().toString(),
         name,
         email,
         phone,
@@ -81,6 +81,7 @@ class ContactsService {
       throw error;
     }
   }
+
   async updateStatusContact(contactId, favorite) {
     try {
       const contact = await Contact.findByPk(contactId);
