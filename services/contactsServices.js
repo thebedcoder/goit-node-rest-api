@@ -1,92 +1,84 @@
-import fs from "fs/promises";
-import path from "path";
-
-const contactsPath = path.join(process.cwd(), "db", "contacts.json");
+import Contact from "../models/Contact.js";
 
 class ContactsService {
-  constructor() {
-    this.contactsPath = contactsPath;
-  }
-
-  async readContactsFile() {
-    try {
-      const data = await fs.readFile(this.contactsPath, "utf-8");
-      return JSON.parse(data);
-    } catch (error) {
-      console.error("Error reading contacts file:", error);
-      return [];
-    }
-  }
-
   async listContacts() {
     try {
-      const contacts = await this.readContactsFile();
-      return contacts;
+      const contacts = await Contact.findAll({
+        order: [["createdAt", "DESC"]],
+      });
+      return contacts.map((contact) => contact.toJSON());
     } catch (error) {
       console.error("Error listing contacts:", error);
-      return [];
+      throw error;
     }
   }
 
   async getContactById(contactId) {
-    const contacts = await this.readContactsFile();
-    const contact = contacts.find((c) => c.id === contactId);
-    return contact || null;
+    try {
+      const contact = await Contact.findByPk(contactId);
+      return contact ? contact.toJSON() : null;
+    } catch (error) {
+      console.error("Error fetching contact:", error);
+      throw error;
+    }
   }
 
   async removeContact(contactId) {
     try {
-      const contacts = await this.readContactsFile();
-      const index = contacts.findIndex((c) => c.id === contactId);
+      const contact = await Contact.findByPk(contactId);
 
-      if (index === -1) {
-        return null; // Контакт не знайдено
+      if (!contact) {
+        return null;
       }
 
-      const [removedContact] = contacts.splice(index, 1);
-      await fs.writeFile(this.contactsPath, JSON.stringify(contacts, null, 2));
-      return removedContact;
+      const contactData = contact.toJSON();
+      await contact.destroy();
+      return contactData;
     } catch (error) {
       console.error("Error removing contact:", error);
-      return null;
+      throw error;
     }
   }
 
   async addContact(name, email, phone) {
     try {
-      const contacts = await this.readContactsFile();
-      const newContact = {
+      const newContact = await Contact.create({
         id: Date.now().toString(),
         name,
         email,
         phone,
-      };
+      });
 
-      contacts.push(newContact);
-      await fs.writeFile(this.contactsPath, JSON.stringify(contacts, null, 2));
-      return newContact;
+      return newContact.toJSON();
     } catch (error) {
       console.error("Error adding contact:", error);
-      return null;
+      throw error;
     }
   }
 
   async updateContact(contactId, updateData) {
     try {
-      const contacts = await this.readContactsFile();
-      const index = contacts.findIndex((c) => c.id === contactId);
+      const contact = await Contact.findByPk(contactId);
 
-      if (index === -1) {
-        return null; // Контакт не знайдено
+      if (!contact) {
+        return null;
       }
 
-      const updatedContact = { ...contacts[index], ...updateData };
-      contacts[index] = updatedContact;
-      await fs.writeFile(this.contactsPath, JSON.stringify(contacts, null, 2));
-      return updatedContact;
+      const filteredUpdateData = Object.fromEntries(
+        Object.entries(updateData).filter(
+          ([key, value]) => value !== undefined,
+        ),
+      );
+
+      if (Object.keys(filteredUpdateData).length === 0) {
+        return contact.toJSON();
+      }
+
+      await contact.update(filteredUpdateData);
+      return contact.toJSON();
     } catch (error) {
       console.error("Error updating contact:", error);
-      return null;
+      throw error;
     }
   }
 }
