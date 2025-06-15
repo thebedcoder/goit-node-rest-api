@@ -81,6 +81,21 @@ class ContactsService {
       throw error;
     }
   }
+  async updateStatusContact(contactId, favorite) {
+    try {
+      const contact = await Contact.findByPk(contactId);
+
+      if (!contact) {
+        return null;
+      }
+
+      await contact.update({ favorite });
+      return contact.toJSON();
+    } catch (error) {
+      console.error("Error updating contact status:", error);
+      throw error;
+    }
+  }
 }
 
 export const contactsService = new ContactsService();
