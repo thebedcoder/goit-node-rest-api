@@ -53,6 +53,7 @@ class AuthService {
 
   async updateSubscription(id, subscription) {
     try {
+      await User.update({ subscription }, { where: { id } });
       const updatedUser = await User.findOne({
         where: { id },
         attributes: ["email", "subscription"],
