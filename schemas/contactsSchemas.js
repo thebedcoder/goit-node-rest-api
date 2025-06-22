@@ -15,3 +15,7 @@ export const updateContactSchema = Joi.object({
     .pattern(/^[0-9]+$/)
     .optional(),
 }).or("name", "email", "phone");
+
+export const updateFavoriteSchema = Joi.object({
+  favorite: Joi.boolean().required(),
+}).required();
