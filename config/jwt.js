@@ -14,7 +14,7 @@ passport.use(
   new Strategy(params, async (payload, done) => {
     try {
       const user = await User.findByPk(payload.id);
-      if (!user) {
+      if (!user || user.token !== payload.token) {
         return done(new HttpError(401), false);
       }
       return done(null, user);
@@ -23,4 +23,3 @@ passport.use(
     }
   }),
 );
- 
