@@ -4,7 +4,7 @@ import HttpError from "./HttpError.js";
 export const auth = (req, res, next) =>
   passport.authenticate("jwt", { session: false }, (err, user) => {
     if (err || !user) {
-      throw HttpError(401);
+      return next(HttpError(401));
     }
     req.user = user;
     next();
