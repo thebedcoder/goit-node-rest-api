@@ -1,11 +1,26 @@
 import path from "path";
 import multer from "multer";
+import fs from "fs/promises";
 
 const avatarsDir = path.join(process.cwd(), "public", "avatars");
+const uploadDir = path.join(process.cwd(), "temp");
+
+const isAccessible = (path) => {
+  return fs
+    .access(path)
+    .then(() => true)
+    .catch(() => false);
+};
+
+const createFolderIfNotExist = async (folder) => {
+  if (!(await isAccessible(folder))) {
+    await fs.mkdir(folder, { recursive: true });
+  }
+};
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, avatarsDir);
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     cb(null, file.originalname);
@@ -30,4 +45,4 @@ const upload = multer({
   limits: { fileSize: 1024 * 1024 * 5 },
 });
 
-export { upload, avatarsDir };
+export { upload, avatarsDir, uploadDir, createFolderIfNotExist };

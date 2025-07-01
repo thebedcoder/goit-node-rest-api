@@ -2,10 +2,14 @@ import User from "../models/Users.js";
 import bcrypt from "bcrypt";
 
 class AuthService {
-  async register(email, password) {
+  async register(email, password, avatarURL) {
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await User.create({ email, password: hashedPassword });
+      const user = await User.create({
+        email,
+        password: hashedPassword,
+        avatarURL,
+      });
 
       return user;
     } catch (error) {
@@ -61,6 +65,20 @@ class AuthService {
       return updatedUser;
     } catch (error) {
       console.error("Error updating subscription:", error);
+      throw error;
+    }
+  }
+
+  async updateAvatar(id, avatarURL) {
+    try {
+      await User.update({ avatarURL }, { where: { id } });
+      const updatedUser = await User.findOne({
+        where: { id },
+        attributes: ["avatarURL"],
+      });
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating avatar:", error);
       throw error;
     }
   }

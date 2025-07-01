@@ -1,6 +1,8 @@
 import { authService } from "../services/authService.js";
+import { fileService } from "../services/fileService.js";
 import HttpError from "../helpers/HttpError.js";
 import jwt from "jsonwebtoken";
+import gravatar from "gravatar";
 
 const { JWT_SECRET } = process.env;
 
@@ -11,11 +13,13 @@ export const register = async (req, res, next) => {
     if (registeredUser) {
       throw HttpError(409, "Email in use");
     }
-    const user = await authService.register(email, password);
+    const avatarURL = gravatar.url(email, { s: "250", protocol: "https" });
+    const user = await authService.register(email, password, avatarURL);
     res.status(201).json({
       user: {
         email: user.email,
         subscription: user.subscription,
+        avatarURL: user.avatarURL,
       },
     });
   } catch (error) {
@@ -87,6 +91,19 @@ export const updateSubscription = async (req, res, next) => {
         subscription: updatedUser.subscription,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAvatar = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const { file } = req;
+    const newPath = await fileService.moveFile(file, `public/avatars/${id}`);
+    const avatarPath = newPath.replace("public/", "");
+    const avatarURL = await authService.updateAvatar(id, avatarPath);
+    res.status(200).json({ avatarURL });
   } catch (error) {
     next(error);
   }
