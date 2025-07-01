@@ -13,21 +13,33 @@ import {
   updateContactSchema,
   updateFavoriteSchema,
 } from "../schemas/contactsSchemas.js";
+import { auth } from "../helpers/auth.js";
 
 const contactsRouter = express.Router();
 
-contactsRouter.get("/", getAllContacts);
+contactsRouter.get("/", auth, getAllContacts);
 
-contactsRouter.get("/:id", getOneContact);
+contactsRouter.get("/:id", auth, getOneContact);
 
-contactsRouter.delete("/:id", deleteContact);
+contactsRouter.delete("/:id", auth, deleteContact);
 
-contactsRouter.post("/", validateBody(createContactSchema), createContact);
+contactsRouter.post(
+  "/",
+  auth,
+  validateBody(createContactSchema),
+  createContact,
+);
 
-contactsRouter.put("/:id", validateBody(updateContactSchema), updateContact);
+contactsRouter.put(
+  "/:id",
+  auth,
+  validateBody(updateContactSchema),
+  updateContact,
+);
 
 contactsRouter.patch(
   "/:id/favorite",
+  auth,
   validateBody(updateFavoriteSchema),
   updateStatusContact,
 );

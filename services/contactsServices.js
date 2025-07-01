@@ -1,11 +1,20 @@
 import Contact from "../models/Contact.js";
 
 class ContactsService {
-  async listContacts() {
+  async listContacts(owner, page, limit, favorite) {
     try {
+      const whereClause = { owner };
+
+      if (favorite !== undefined) {
+        whereClause.favorite = favorite;
+      }
+
       const contacts = await Contact.findAll({
+        where: whereClause,
         raw: true,
         order: [["createdAt", "DESC"]],
+        limit,
+        offset: (page - 1) * limit,
       });
       return contacts;
     } catch (error) {
@@ -14,9 +23,11 @@ class ContactsService {
     }
   }
 
-  async getContactById(contactId) {
+  async getContactById(contactId, owner) {
     try {
-      const contact = await Contact.findByPk(contactId);
+      const contact = await Contact.findOne({
+        where: { id: contactId, owner },
+      });
       return contact ? contact.toJSON() : null;
     } catch (error) {
       console.error("Error fetching contact:", error);
@@ -24,9 +35,11 @@ class ContactsService {
     }
   }
 
-  async removeContact(contactId) {
+  async removeContact(contactId, owner) {
     try {
-      const contact = await Contact.findByPk(contactId);
+      const contact = await Contact.findOne({
+        where: { id: contactId, owner },
+      });
 
       if (!contact) {
         return null;
@@ -41,12 +54,13 @@ class ContactsService {
     }
   }
 
-  async addContact(name, email, phone) {
+  async addContact(name, email, phone, owner) {
     try {
       const newContact = await Contact.create({
         name,
         email,
         phone,
+        owner,
       });
 
       return newContact.toJSON();
@@ -56,9 +70,11 @@ class ContactsService {
     }
   }
 
-  async updateContact(contactId, updateData) {
+  async updateContact(contactId, updateData, owner) {
     try {
-      const contact = await Contact.findByPk(contactId);
+      const contact = await Contact.findOne({
+        where: { id: contactId, owner },
+      });
 
       if (!contact) {
         return null;
@@ -82,9 +98,11 @@ class ContactsService {
     }
   }
 
-  async updateStatusContact(contactId, favorite) {
+  async updateStatusContact(contactId, favorite, owner) {
     try {
-      const contact = await Contact.findByPk(contactId);
+      const contact = await Contact.findOne({
+        where: { id: contactId, owner },
+      });
 
       if (!contact) {
         return null;
