@@ -3,6 +3,7 @@ import Contact from "../models/Contact.js";
 import User from "../models/Users.js";
 import fs from "fs/promises";
 import path from "path";
+import { avatarsDir } from "./storage.js";
 
 export async function initializeDatabase() {
   try {
@@ -64,4 +65,22 @@ export async function closeDatabase() {
   } catch (error) {
     console.error("Error closing database:", error);
   }
+}
+
+const isAccessible = (path) => {
+  return fs
+    .access(path)
+    .then(() => true)
+    .catch(() => false);
+};
+
+const createFolderIfNotExist = async (folder) => {
+  if (!(await isAccessible(folder))) {
+    await fs.mkdir(folder, { recursive: true });
+  }
+};
+
+export async function initStorage() {
+  await createFolderIfNotExist(avatarsDir);
+  console.log("Storage initialized successfully");
 }
