@@ -3,6 +3,7 @@ import Contact from "../models/Contact.js";
 import User from "../models/Users.js";
 import fs from "fs/promises";
 import path from "path";
+import { avatarsDir, uploadDir, createFolderIfNotExist } from "./storage.js";
 
 export async function initializeDatabase() {
   try {
@@ -64,4 +65,10 @@ export async function closeDatabase() {
   } catch (error) {
     console.error("Error closing database:", error);
   }
+}
+
+export async function initStorage() {
+  await createFolderIfNotExist(uploadDir);
+  await createFolderIfNotExist(avatarsDir);
+  console.log("Storage initialized successfully");
 }
