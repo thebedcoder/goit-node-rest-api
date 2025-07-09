@@ -7,7 +7,7 @@ storageRouter.post("/upload", upload.single("avatar"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
-  res.json({ avatar: req.file.path });
+  res.json({ avatar: `${process.env.BASE_URL}/${req.file.path}` });
 });
 
-export default storageRouter; 
+export default storageRouter;

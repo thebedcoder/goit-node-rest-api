@@ -3,6 +3,7 @@ import { fileService } from "../services/fileService.js";
 import HttpError from "../helpers/HttpError.js";
 import jwt from "jsonwebtoken";
 import gravatar from "gravatar";
+import { mailTransporter } from "../config/mail.js";
 
 const { JWT_SECRET } = process.env;
 
@@ -15,6 +16,10 @@ export const register = async (req, res, next) => {
     }
     const avatarURL = gravatar.url(email, { s: "250", protocol: "https" });
     const user = await authService.register(email, password, avatarURL);
+    const verificationToken = await authService.generateVerificationToken(
+      email,
+    );
+    await sendVerificationEmail(email, verificationToken);
     res.status(201).json({
       user: {
         email: user.email,
@@ -40,6 +45,9 @@ export const login = async (req, res, next) => {
     );
     if (!isPasswordValid) {
       throw HttpError(401, "Email or password is wrong");
+    }
+    if (!user.verify) {
+      throw HttpError(401, "Email not verified");
     }
 
     const token = jwt.sign({ id: user.id }, JWT_SECRET, {
@@ -103,8 +111,46 @@ export const updateAvatar = async (req, res, next) => {
     const newPath = await fileService.moveFile(file, `public/avatars/${id}`);
     const avatarPath = newPath.replace("public/", "");
     const { avatarURL } = await authService.updateAvatar(id, avatarPath);
-    res.status(200).json({ avatarURL });
+    res.status(200).json({ avatarURL: `${process.env.BASE_URL}/${avatarURL}` });
   } catch (error) {
     next(error);
   }
+};
+
+export const verify = async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+    await authService.verifyUser(verificationToken);
+    res.status(200).json({ message: "Verification successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendVerificationEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await authService.getUserByEmail(email);
+    if (!user) {
+      throw HttpError(401, "Email not found");
+    }
+    if (user.verify) {
+      throw HttpError(400, "Verification has already been passed");
+    }
+    await sendVerificationEmail(email, user.verificationToken);
+    res.status(200).json({ message: "Verification email sent" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendVerificationEmail = async (email, verificationToken) => {
+  const verificationLink = `${process.env.BASE_URL}/api/auth/verify/${verificationToken}`;
+  const mailOptions = {
+    from: process.env.MAIL_USER,
+    to: email,
+    subject: "Email Verification",
+    text: `Click the link to verify your email: ${verificationLink}`,
+  };
+  await mailTransporter.sendMail(mailOptions);
 };

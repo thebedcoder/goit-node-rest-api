@@ -13,8 +13,8 @@ export async function initializeDatabase() {
     await sequelize.sync({ force: false }); // Set to true to drop tables on restart
     console.log("Database tables synchronized");
 
-    // await seedUsers();
-    // await seedContacts();
+    await seedUsers();
+    await seedContacts();
   } catch (error) {
     console.error("Unable to initialize database:", error);
     process.exit(1);
