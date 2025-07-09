@@ -92,13 +92,13 @@ class AuthService {
 
   async verifyUser(verificationToken) {
     const user = await User.findOne({ where: { verificationToken } });
-    const { email } = user;
     if (!user) {
       throw new Error("User not found");
     }
     if (user.verificationToken !== verificationToken) {
       throw new Error("Invalid verification token");
     }
+    const { email } = user;
     await User.update(
       { verify: true, verificationToken: null },
       { where: { email } },
