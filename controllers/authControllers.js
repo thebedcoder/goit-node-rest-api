@@ -102,7 +102,7 @@ export const updateAvatar = async (req, res, next) => {
     const { file } = req;
     const newPath = await fileService.moveFile(file, `public/avatars/${id}`);
     const avatarPath = newPath.replace("public/", "");
-    const avatarURL = await authService.updateAvatar(id, avatarPath);
+    const { avatarURL } = await authService.updateAvatar(id, avatarPath);
     res.status(200).json({ avatarURL });
   } catch (error) {
     next(error);
