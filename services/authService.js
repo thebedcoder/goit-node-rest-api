@@ -1,5 +1,6 @@
 import User from "../models/Users.js";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 class AuthService {
   async register(email, password, avatarURL) {
@@ -81,6 +82,28 @@ class AuthService {
       console.error("Error updating avatar:", error);
       throw error;
     }
+  }
+
+  async generateVerificationToken(email) {
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    await User.update({ verificationToken }, { where: { email } });
+    return verificationToken;
+  }
+
+  async verifyUser(verificationToken) {
+    const user = await User.findOne({ where: { verificationToken } });
+    const { email } = user;
+    if (!user) {
+      throw new Error("User not found");
+    }
+    if (user.verificationToken !== verificationToken) {
+      throw new Error("Invalid verification token");
+    }
+    await User.update(
+      { verify: true, verificationToken: null },
+      { where: { email } },
+    );
+    return user;
   }
 }
 
