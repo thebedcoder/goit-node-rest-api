@@ -6,9 +6,15 @@ import {
   current,
   updateSubscription,
   updateAvatar,
+  verify,
+  resendVerificationEmail,
 } from "../controllers/authControllers.js";
 import validateBody from "../helpers/validateBody.js";
-import { userSchema, subscriptionSchema } from "../schemas/userSchemas.js";
+import {
+  userSchema,
+  subscriptionSchema,
+  emailSchema,
+} from "../schemas/userSchemas.js";
 import { upload } from "../config/storage.js";
 import { auth } from "../helpers/auth.js";
 
@@ -25,5 +31,7 @@ authRouter.patch(
   updateSubscription,
 );
 authRouter.patch("/avatars", auth, upload.single("avatar"), updateAvatar);
+authRouter.get("/verify/:verificationToken", verify);
+authRouter.post("/verify", validateBody(emailSchema), resendVerificationEmail);
 
 export default authRouter;
